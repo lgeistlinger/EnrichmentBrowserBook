@@ -1,0 +1,17 @@
+Package: EnrichmentBrowserBook
+Version: 0.99.1
+Date: 2020-11-16
+Title: The EnrichmentBrowser Book
+Authors@R: person("Ludwig", "Geistlinger", role=c("aut", "cre"), email =
+    "ludwig.geistlinger@gmail.com")
+Depends: 
+    EnrichmentBrowser,
+    knitr,
+    BiocStyle,
+    rebook
+biocViews: 
+Description: 
+    Describes how to use the EnrichmentBrowser package.
+License: GPL-3
+VignetteBuilder: knitr
+BiocType: Book

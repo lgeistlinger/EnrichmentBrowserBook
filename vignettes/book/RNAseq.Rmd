@@ -1,0 +1,134 @@
+# (PART) Data types {-}
+
+# RNA-seq data
+```{r, echo=FALSE, results='asis'}
+rebook::chapterPreamble()
+```
+
+# Overview
+
+# Input data
+
+For expression-based enrichment analysis on the **full expression matrix**,
+we recommend providing logTPMs (or logRPKMs / logFPKMs) for RNA-seq data.
+
+When given raw read counts, we recommend to apply a variance-stabilizing 
+transformation such as `voom` to arrive at library-size normalized
+logCPMs.
+
+The central data structure for working with high-throughput experimental assay
+data in Bioconductor is the `r Biocpkg("SummarizedExperiment")` container. 
+
+In the following, we describe how to construct from scratch.
+ 
+Using the `EnrichmentBrowser::import` function it is also possible to import
+fully processed expression datasets and results of differential expression (DE)
+analysis from limma, edgeR, and DESeq2.
+
+## Reading expression data from file 
+
+## `SummarizedExperiment` or `SingleCellExperiment` input
+
+We also note that single-cell data stored in a `r Biocpkg("SingleCellExperiment")`
+
+## Normalization
+
+## Differential expression analysis
+
+## Import from popular DE tools
+
+```{R}
+data(airway, package = "airway")
+se <- airway
+se$GROUP <- ifelse(se$dex == "trt", 1, 0)
+emat <- assay(se)
+```
+
+### Import from `limma`
+
+```{r}
+library(limma)
+library(edgeR)
+group <- factor(se$GROUP)
+design <- model.matrix(~ group)
+keep <- filterByExpr(emat, design)
+el <- voom(emat[keep,], design)
+```
+
+```{r}
+fit <- lmFit(el, design)
+fit <- eBayes(fit, robust = TRUE)
+res <- topTable(fit, coef = 2, number = nrow(el), sort.by = "none")
+```
+
+```{r}
+se <- EnrichmentBrowser::import(el, res)
+```
+
+### Import from `edgeR`
+
+```{r}
+d <- DGEList(emat)
+d <- calcNormFactors(d)
+d <- estimateDisp(d, design)
+```
+
+```{r}
+fit <- glmQLFit(d, design)
+qlf <- glmQLFTest(fit)
+res <- topTags(qlf, n = nrow(d), sort.by = "none")
+```
+
+```{r}
+se <- EnrichmentBrowser::import(d, res)
+se
+```
+
+### Import from `DESeq2`
+
+```{r}
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(emat,
+                              colData = DataFrame(group = group),
+                              design = ~ group)
+dds <- DESeq(dds)
+res <- results(dds)
+```
+
+```{r}
+se <- EnrichmentBrowser::import(dds, res)
+se
+```
+
+## ID mapping
+
+
+# Case study
+
+For RNA-seq data, we consider transcriptome profiles of four primary human
+airway smooth muscle cell lines in two conditions: control and treatment with
+dexamethasone
+[Himes et al., 2014](https://doi.org/10.1371/journal.pone.0099625).
+
+We load the
+[airway](http://bioconductor.org/packages/airway)
+dataset
+
+
+```{R}
+library(airway)
+data(airway)
+```
+
+For further analysis, we only keep genes that are annotated to an ENSEMBL gene ID.
+
+
+```{R}
+airSE <- airway[grep("^ENSG", names(airway)), ]
+dim(airSE)
+```
+
+```{R}
+assay(airSE)[1:4,1:4]
+```
+

@@ -1,0 +1,141 @@
+---
+title: "Seamless navigation through combined results of set- and network-based
+        enrichment analysis"
+author:
+  - name: Ludwig Geistlinger
+    affiliation: School of Public Health, City University of New York 
+    email: ludwig.geistlinger@sph.cuny.edu
+package: EnrichmentBrowser
+abstract: >
+    The _EnrichmentBrowser_ package implements an analysis pipeline
+    for high-throughput gene expression data as measured with microarrays and 
+    RNA-seq. In a workflow-like manner, the package brings together a selection of
+    established Bioconductor packages for gene expression data analysis. It
+    integrates a wide range of gene set and network enrichment analysis methods 
+    and facilitates combination and exploration of results across methods.
+output:
+  BiocStyle::html_document:
+    toc: true 
+    toc_depth: 2
+vignette: >
+  % \VignetteIndexEntry{EnrichmentBrowser Introduction}
+  % \VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, echo=FALSE}
+suppressPackageStartupMessages({ 
+    library(EnrichmentBrowser)
+    library(ALL)
+    library(airway)
+    library(limma)
+    library(edgeR)
+    library(DESeq2)
+})
+```
+
+# Introduction
+
+The `r Biocpkg("EnrichmentBrowser")` package implements essential functionality
+for the enrichment analysis of gene expression data.
+The analysis combines the advantages of set-based and network-based enrichment 
+analysis to derive high-confidence gene sets and biological pathways 
+that are differentially regulated in the expression data under investigation.
+Besides, the package facilitates the visualization and exploration of such sets 
+and pathways.
+
+The following instructions will guide you through an end-to-end expression data
+analysis workflow including:
+
+- Preparing the data
+- Preprocessing of the data
+- Differential expression (DE) analysis
+- Defining gene sets of interest
+- Executing individual enrichment methods
+- Combining the results of different methods
+- Visualize and explore the results
+
+All of these steps are modular, i.e.~each step can be executed individually and 
+fine-tuned with several parameters. In case you are interested in a 
+particular step, you can directly move on to the respective section.
+For example, if you have differential expression already calculated for each gene, 
+and your are now interested whether certain gene functions are enriched for
+differential expression, section _Set-based enrichment analysis_ would be the
+one you should go for. 
+
+The last section _Putting it all together_ also demonstrates how to wrap 
+the whole workflow into a single function, making use of suitably chosen 
+defaults.
+
+# Relevant literature
+
+If you use the EnrichmentBrowser for published research, please cite:
+
+- Geistlinger L, Csaba G, Zimmer R.
+[Bioconductor's EnrichmentBrowser: seamless navigation through combined results of set- & network-based enrichment analysis](https://doi.org/10.1186/s12859-016-0884-1).
+_BMC Bioinformatics_, 17:45, 2016.
+
+If you use the GGEA method for network-based enrichment analysis,
+please additionally cite: 
+
+- Geistlinger L, Csaba G, Küffner R, Mulder N, Zimmer R.
+[From sets to graphs: towards a realistic enrichment analysis of transcriptomic systems](https://doi.org/10.1093/bioinformatics/btr228).
+_Bioinformatics_, 27(13):i366-73, 2011.
+
+For a comprehensive assessment of the availabe set-based enrichment methods, and
+practical recommendations for pre-processing of inputs, method selection, and
+result interpretation, please see:
+
+- Geistlinger L, Csaba G, Santarelli M, Ramos M, Schiffer L, Turaga N, Law C, Davis S, Carey V, Morgan M, Zimmer R, Waldron L.
+[Toward a gold standard for benchmarking gene set enrichment analysis](https://doi.org/10.1093/bib/bbz158).
+_Brief Bioinform_, 2020.
+
+For considerations on how to construct a gene regulatory network for network-based
+enrichment analysis, please see: 
+
+- Geistlinger L, Csaba G, Dirmeier S, Küffner R, Zimmer R.
+[A comprehensive gene regulatory network for the diauxic shift in Saccharomyces cerevisiae](https://doi.org/10.1093/nar/gkt631).
+_Nucleic Acids Res_, 41(18):8452-63, 2013.
+
+# Quick start
+
+After installation of the package start with
+
+1. Load the package:
+```{r}
+library(EnrichmentBrowser)
+```
+
+2. Prepare the expression matrix (genes x samples):
+
+```{r}
+data(airway, package = "airway")
+```
+
+3. Define the experimental design (a group vector):
+
+```{r}
+airway$GROUP <- ifelse(airway$dex == "untrt", 0, 1)
+```
+
+4. Differential expression analysis between sample groups:
+```{r}
+airway <- deAna(airway, method = "edgeR") 
+```
+
+3. Obtain gene sets of interest:
+```{r}
+kegg.gs <- getGenesets(org = "hsa", db = "kegg")
+```
+
+4. Conduct the enrichment analysis:
+```{r}
+ea.res <- sbea(method = "ora", se = airway, gs = kegg.gs, perm = 0)
+```
+
+5. Explore the results:
+```{r}
+gsRanking(ea.res)
+eaBrowse(ea.res, nr.show = 3)
+```
+
+

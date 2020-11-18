@@ -1,0 +1,149 @@
+--- 
+title: "The EnrichmentBrowser Book"
+documentclass: book
+bibliography: ref.bib
+biblio-style: apalike
+link-citations: yes
+description: "Seamless navigation through combined results of set- and network-based enrichment analysis"
+github-repo: lgeistlinger/EnrichmentBrowserBook
+---
+
+```{r, echo=FALSE}
+.gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
+```
+
+---
+date: "`r rebook::openingDetails(Copyright='Bioconductor, 2020', Source=.gh_url)`"
+url: "`r .gh_url`"
+---
+
+# Welcome
+
+```{r, echo=FALSE, results='asis'}
+rebook::chapterPreamble()
+```
+
+# Introduction
+
+The `r Biocpkg("EnrichmentBrowser")` package implements essential functionality
+for the enrichment analysis of gene expression data.
+The analysis combines the advantages of set-based and network-based enrichment 
+analysis to derive high-confidence gene sets and biological pathways 
+that are differentially regulated in the expression data under investigation.
+Besides, the package facilitates the visualization and exploration of such sets 
+and pathways.
+
+The following instructions will guide you through an end-to-end expression data
+analysis workflow including:
+
+- Preparing the data
+- Preprocessing of the data
+- Differential expression (DE) analysis
+- Defining gene sets of interest
+- Executing individual enrichment methods
+- Combining the results of different methods
+- Visualize and explore the results
+
+All of these steps are modular, i.e.~each step can be executed individually and 
+fine-tuned with several parameters. In case you are interested in a 
+particular step, you can directly move on to the respective section.
+For example, if you have differential expression already calculated for each gene, 
+and your are now interested whether certain gene functions are enriched for
+differential expression, section _Set-based enrichment analysis_ would be the
+one you should go for. 
+
+The last section _Putting it all together_ also demonstrates how to wrap 
+the whole workflow into a single function, making use of suitably chosen 
+defaults.
+
+# Relevant literature
+
+If you use the EnrichmentBrowser for published research, please cite:
+
+- Geistlinger L, Csaba G, Zimmer R.
+[Bioconductor's EnrichmentBrowser: seamless navigation through combined results of set- & network-based enrichment analysis](https://doi.org/10.1186/s12859-016-0884-1).
+_BMC Bioinformatics_, 17:45, 2016.
+
+If you use the GGEA method for network-based enrichment analysis,
+please additionally cite: 
+
+- Geistlinger L, Csaba G, Küffner R, Mulder N, Zimmer R.
+[From sets to graphs: towards a realistic enrichment analysis of transcriptomic systems](https://doi.org/10.1093/bioinformatics/btr228).
+_Bioinformatics_, 27(13):i366-73, 2011.
+
+For a comprehensive assessment of the availabe set-based enrichment methods, and
+practical recommendations for pre-processing of inputs, method selection, and
+result interpretation, please see:
+
+- Geistlinger L, Csaba G, Santarelli M, Ramos M, Schiffer L, Turaga N, Law C, Davis S, Carey V, Morgan M, Zimmer R, Waldron L.
+[Toward a gold standard for benchmarking gene set enrichment analysis](https://doi.org/10.1093/bib/bbz158).
+_Brief Bioinform_, 2020.
+
+For considerations on how to construct a gene regulatory network for network-based
+enrichment analysis, please see: 
+
+- Geistlinger L, Csaba G, Dirmeier S, Küffner R, Zimmer R.
+[A comprehensive gene regulatory network for the diauxic shift in Saccharomyces cerevisiae](https://doi.org/10.1093/nar/gkt631).
+_Nucleic Acids Res_, 41(18):8452-63, 2013.
+
+# Quick start
+
+After installation of the package start with
+
+1. Load the package:
+```{r, message = FALSE}
+library(EnrichmentBrowser)
+```
+
+2. Prepare the expression matrix (genes x samples):
+
+```{r}
+data(airway, package = "airway")
+```
+
+3. Define the experimental design (a group vector):
+
+```{r}
+airway$GROUP <- ifelse(airway$dex == "untrt", 0, 1)
+```
+
+4. Differential expression analysis between sample groups:
+```{r}
+airway <- deAna(airway, method = "edgeR") 
+```
+
+3. Obtain gene sets of interest:
+```{r}
+kegg.gs <- getGenesets(org = "hsa", db = "kegg")
+```
+
+4. Conduct the enrichment analysis:
+```{r}
+ea.res <- sbea(method = "ora", se = airway, gs = kegg.gs, perm = 0)
+```
+
+5. Explore the results:
+```{r}
+gsRanking(ea.res)
+eaBrowse(ea.res, nr.show = 3)
+```
+
+## How to get help
+
+Most questions about `r Biocpkg("EnrichmentBrowser")` should be answered by the documentation. 
+Every function mentioned in this guide has its own help page. 
+For example, a detailed description of the arguments and output of the `getGenesets()` function can be obtained by typing `?getGenesets` or `help(getGenesets)` at the R prompt. 
+Further detail on the methods or the underlying theory can be found in the references at the bottom of each help page.
+
+The authors of the package always appreciate receiving reports of bugs in the package functions or in the documentation. 
+The same goes for well-considered suggestions for improvements. 
+Other questions about how to use `r Biocpkg("EnrichmentBrowser")` are best sent to the [Bioconductor support site](https://support.bioconductor.org).
+Please send requests for general assistance and advice to the support site, rather than to the individual authors. 
+Users posting to the support site for the first time may find it helpful to read the [posting guide](http://www.bioconductor.org/help/support/posting-guide).
+
+## Session information {-}
+
+```{r, echo=FALSE, results='asis'}
+rebook::prettySessionInfo()
+```
+
