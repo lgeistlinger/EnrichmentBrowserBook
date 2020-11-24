@@ -1,11 +1,15 @@
-# Data structures
+# Data structures {#chap:dstructs}
 
-## SummarizedExperiment
+```{r, echo=FALSE, results='asis'}
+rebook::chapterPreamble()
+```
+
+## SummarizedExperiment {#sec:SE}
 
 The central data structure for working with high-throughput experimental assay
 data in Bioconductor is the `r Biocpkg("SummarizedExperiment")` container.
 
-```{r help, eval=FALSE}
+```{r se-help, eval=FALSE}
 ?SummarizedExperiment
 ```
 
@@ -15,14 +19,13 @@ Previous versions of the `r Biocpkg("EnrichmentBrowser")` used the
 `ExpressionSet` data structure.
 The migration to `SummarizedExperiment` in the current release of the
 `EnrichmentBrowser` is done to reflect recent developments in 
-Bioconductor, which discourage use of `ExpressionSet` in favor of 
-`SummarizedExperiment`.
+Bioconductor, which discourage use of `ExpressionSet` in favor of `SummarizedExperiment`.
 Major reasons are the compatibility of `SummarizedExperiment` with 
 operations on genomic regions as well as efficient dealing with big data.
 
 To enable a smooth transition, all functions of the `r Biocpkg("EnrichmentBrowser")`
-are still accepting also an `ExpressionSet` as input, but are  
-consistently returning a `SummarizedExperiment` as output.
+are still accepting also an `ExpressionSet` as input, but are consistently
+returning a `SummarizedExperiment` as output.
 
 Furthermore, users can always coerce from `SummarizedExperiment` to 
 `ExpressionSet` via

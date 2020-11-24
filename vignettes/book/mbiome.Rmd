@@ -1,30 +1,27 @@
-# (PART) Data types {-}
-
-# RNA-seq data
+# Microbiome data
 
 ```{r setup, echo=FALSE, results='asis'}
 rebook::chapterPreamble()
 
 suppressPackageStartupMessages({ 
     library(EnrichmentBrowser)
-    library(airway)
-    library(limma)
-    library(edgeR)
-    library(DESeq2)
+    library(curatedMetagenomicData)
+    library(lefser)
+    library(metagenomeSeq)
 })
 ```
 
-
-For expression-based enrichment analysis on the **full expression matrix**,
-we recommend providing logTPMs (or logRPKMs / logFPKMs) for RNA-seq data.
+For abundance-based enrichment analysis on the **full abundance matrix**,
+we recommend providing library-size normalized log counts for microbiome data.
 
 When given raw read counts, we recommend to apply a variance-stabilizing 
 transformation such as `voom` to arrive at library-size normalized
 logCPMs.
 
 Using the `EnrichmentBrowser::import` function it is also possible to import
-fully processed expression datasets and results of differential expression (DE)
-analysis from `r Biocpkg("limma")`, `r Biocpkg("edgeR")`, and `r Biocpkg("DESeq2")`.
+fully processed metagenomic datasets and results of differential abundance (DA)
+analysis from `r Biocpkg("limma")`, `r Biocpkg("edgeR")`, `r Biocpkg("DESeq2")`,
+`r Biocpkg("lefser")`, and `r Biocpkg("metagenomeSeq")`.
 
 As introduced in Section \@ref(sec:SE), the central data structure for working
 with high-throughput experimental assay data in Bioconductor is the
@@ -45,7 +42,7 @@ We also note that single-cell data stored in a `r Biocpkg("SingleCellExperiment"
 ## Normalization
 
 Normalization of high-throughput expression data is essential to make results
-within and between experiments comparable.
+within and between samples comparable.
 Microarray (intensity measurements) and RNA-seq (read counts) data typically
 show distinct features that need to be normalized for.
 
@@ -68,7 +65,7 @@ e.g. from BioMart or specific Bioconductor annotation packages.
 Both modes are implemented in the `r Biocpkg("EDASeq")` function
 `getGeneLengthAndGCContent`.
 
-## Differential expression analysis
+## Differential abundance analysis
 
 The `r Biocpkg("EnrichmentBrowser")` incorporates established functionality from
 the `r Biocpkg("limma")` package for differential expression analysis between sample
@@ -88,16 +85,9 @@ For more information on experimental design, see the
 [limma user's guide](https://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf),
 chapter 9.  
 
-## Import from popular DE tools
+## Import from popular DA tools
 
-```{R airway-emat}
-data(airway, package = "airway")
-se <- airway
-se$GROUP <- ifelse(se$dex == "trt", 1, 0)
-emat <- assay(se)
-```
-
-### Import from `limma`
+### Import from `lefser`
 
 ```{r limma-emat}
 library(limma)
@@ -172,6 +162,27 @@ idTypes("hsa")
 ```
 
 ## Case study
+
+For microbiome data, we consider metagenomic sequencing data of fecal samples of 
+colorectal carcinoma (CRC) patients
+
+```{r zeller}
+library(curatedMetagenomicData)
+zeller.eset <- ZellerG_2014.metaphlan_bugs_list.stool()
+exprs(eset)[1:5,1:5]
+```
+
+```{r}
+counts <- sweep(exprs( zeller.eset ), 2, zeller.eset$number_reads / 100, "*")
+counts <- round(counts)
+exprs(zeller.eset) <- counts
+```
+
+```{r}        
+zeller.eset <- zeller.eset[, zeller.eset$age < 60] 
+zeller.eset <- zeller.eset[, zeller.eset$study_condition != "adenoma"]
+table(zeller.eset$study_condition)
+```
 
 For RNA-seq data, we consider transcriptome profiles of four primary human
 airway smooth muscle cell lines in two conditions: control and treatment with

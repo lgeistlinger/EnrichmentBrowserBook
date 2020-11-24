@@ -1,0 +1,97 @@
+# Network-based enrichment analysis
+
+```{r setup, echo=FALSE, results='asis'}
+rebook::chapterPreamble()
+
+rebook::extractCached("RNAseq.Rmd", "idmap-airway", "airSE")
+rebook::extractCached("sbea.Rmd", "kegg", "kegg.gs")
+rebook::extractCached("sbea.Rmd", "ora", "ora.air")
+rebook::extractCached("sbea.Rmd", "gsea", "gsea.air")
+
+suppressPackageStartupMessages({ 
+    library(EnrichmentBrowser)
+})
+```
+
+Having found gene sets that show enrichment for differential expression, 
+we are now interested whether these findings can be supported by known
+regulatory interactions. 
+
+For example, we want to know whether transcription factors and their target
+genes are expressed in accordance to the connecting regulations
+(activation/inhibition). 
+Such information is usually given in a gene regulatory network derived from
+specific experiments or compiled from the literature
+([Geistlinger et al., 2013](https://doi.org/10.1093/nar/gkt631) for an example).
+
+## Gene regulatory networks
+
+There are well-studied processes and organisms for which comprehensive and
+well-annotated regulatory networks are available, e.g. the
+[RegulonDB](http://regulondb.ccg.unam.mx) for *E. coli* and
+[Yeastract](http://www.yeastract.com) for *S. cerevisiae*. 
+
+However, there are also cases where such a network is missing or at least
+incomplete.
+A basic workaround is to compile a network from regulations in pathway databases
+such as KEGG.
+
+```{r grn}
+hsa.grn <- compileGRN(org = "hsa", db = "kegg")
+head(hsa.grn)
+```
+
+## Signaling pathway impact analysis
+
+Signaling pathway impact analysis (SPIA) is a network-based enrichment analysis
+method, which is explicitly designed for KEGG signaling pathways
+[Tarca et al., 2009](https://doi.org/ 10.1093/bioinformatics/btn577). The
+method evaluates whether expression changes are propagated across the pathway
+topology in combination with ORA.
+
+
+```{r spia}
+spia.air <- nbea(method = "spia", se = airSE, gs = kegg.gs, grn = hsa.grn)
+gsRanking(spia.air)
+```
+
+## Gene graph enrichment analysis
+
+More generally applicable is gene graph enrichment analysis (GGEA), which
+evaluates consistency of interactions in a given gene regulatory network with
+the observed expression data
+[Geistlinger et al., 2011](https://doi.org/10.1093/bioinformatics/btr228).
+
+
+```{r ggea}
+ggea.air <- nbea(method = "ggea", se = airSE, gs = kegg.gs, grn = hsa.grn)
+gsRanking(ggea.air)
+```
+
+```{r nbea-methods}
+nbeaMethods()
+```
+
+Note #1: As network-based enrichment methods typically do not involve sample
+permutation but rather network permutation, 
+thus avoiding DE re-computation, they can likewise be applied to RNA-seq data.
+
+Note #2: Given the various enrichment methods with individual benefits and
+limitations, combining multiple methods can be beneficial, e.g. combined
+application of a set-based and a network-based method. This has been shown to
+filter out spurious hits of individual methods and to reduce the outcome to
+gene sets accumulating evidence from different methods
+[Geistlinger et al., 2016](https://doi.org/10.1186/s12859-016-0884-1),
+[Alhamdoosh et al., 2017](https://doi.org/10.1093/bioinformatics/btw623). 
+
+The function `combResults` implements the straightforward combination of
+results, thereby facilitating seamless comparison of results across methods.
+For demonstration, we use the ORA and GSEA results for the airway dataset from
+the previous section:
+
+```{r comb-results}
+res.list <- list(ora.air, gsea.air)
+comb.res <- combResults(res.list)
+gsRanking(comb.res)
+```
+

@@ -1,6 +1,8 @@
 # Microarray data
 
-```{r setup, echo=FALSE}
+```{r setup, echo=FALSE, results='asis'}
+rebook::chapterPreamble()
+
 suppressPackageStartupMessages({ 
     library(EnrichmentBrowser)
     library(ALL)
@@ -8,7 +10,7 @@ suppressPackageStartupMessages({
 })
 ```
 
-For expression-based enrichment analysis on the _full expression matrix_, 
+For expression-based enrichment analysis on the **full expression matrix**, 
 we recommend providing normalized log2 intensities for microarray data.
 
 Microarray data is expected to be single-channel. For two-color arrays, it is
@@ -24,7 +26,7 @@ e.g.~using `limma::normalizeWithinArrays`.
    respectively.
 
 For example, let's simulate an expression matrix for 100 probes and 6 microarrays
-as described in the man pages of the `r BiocPkg("limma")` package.
+as described in the man pages of the `r Biocpkg("limma")` package.
 
 In this simulated example, expression values are drawn from the normal distribution,
 
@@ -43,7 +45,7 @@ grp <- c(0, 0, 0, 1, 1, 1)
 where the first two probes are differentially expressed in second group
 
 ```{r}
-y[1:2,4:6] <- y[1:2,4:6] + 2
+intens[1:2,4:6] <- intens[1:2,4:6] + 2
 ```
 
 In this example, `intens` stores the expression matrix, and `grp` is the group vector.
@@ -57,6 +59,7 @@ library(limma)
 
 1. 
 ```{r}
+mdesign <- model.matrix(~factor(grp))
 el <- new("EList", list(E = intens, design = mdesign))
 ```      
  
@@ -68,7 +71,7 @@ res <- topTable(fit, coef = 2, number = nrow(el), sort.by = "none")
 ```     
 
 3. import
-```
+```{r}
 se <- EnrichmentBrowser::import(el, res)
 ```
 
@@ -87,7 +90,7 @@ We load the
 dataset
 
 
-```{R}
+```{R load-ALL}
 library(ALL)
 data(ALL)
 ```
@@ -96,14 +99,7 @@ and select B-cell ALL patients with and without the BCR/ABL fusion, as described
 [Gentleman et al., 2005](https://www.bioconductor.org/help/publications/books/bioinformatics-and-computational-biology-solutions).
 
 
-```{R}
-ind.bs <- grep("^B", ALL$BT)
-ind.mut <- which(ALL$mol.biol %in% c("BCR/ABL", "NEG"))
-sset <- intersect(ind.bs, ind.mut)
-all.eset <- ALL[, sset]
-```
-
-```{R}
+```{R subset-ALL}
 ind.bs <- grep("^B", ALL$BT)
 ind.mut <- which(ALL$mol.biol %in% c("BCR/ABL", "NEG"))
 sset <- intersect(ind.bs, ind.mut)
@@ -114,17 +110,85 @@ We can now access the expression values, which are intensity measurements
 on a log-scale for 12,625 probes (rows) across 79 patients (columns).
 
 
-```{R}
+```{R show-ALL}
 dim(all.eset)
 exprs(all.eset)[1:4,1:4]
 ```
+
+### Preprocessing
 
 As we often have more than one probe per gene, we compute gene expression values
 as the average of the corresponding probe values.
 
 
-```{R, message = FALSE}
+```{R probe2gene, message = FALSE}
 allSE <- probe2gene(all.eset)
 head(names(allSE))
 ```
+
+### Normalization
+
+A default quantile normalization based on
+`normalizeBetweenArrays` from `Biocpkg("limma")` can be carried out via
+
+```{r norm-ma}
+allSE <- normalize(allSE, norm.method = "quantile")
+```
+
+```{r plot-norm, fig.width=12, fig.height=6}
+par(mfrow=c(1,2))
+boxplot(assay(allSE, "raw"))
+boxplot(assay(allSE, "norm"))
+```
+
+Note that this is only done for demonstration, as the ALL data has
+been already RMA-normalized by the authors of the ALL dataset.
+
+### Differential expression analysis
+
+For the ALL dataset, the **GROUP** variable indicates whether the BCR-ABL gene
+fusion is present (1) or not (0).
+
+```{R sample-groups-ALL}
+allSE$GROUP <- ifelse(allSE$mol.biol == "BCR/ABL", 1, 0)
+table(allSE$GROUP)
+```
+
+For microarray expression data, the \Rfunction{deAna} function carries
+out a differential expression analysis between the two groups based on
+functionality from the \Biocpkg{limma} package.
+Resulting fold changes and $t$-test derived $p$-values for each gene are
+appended to the \Robject{rowData} slot.
+
+```{r DE-ana-ALL}
+allSE <- deAna(allSE, padj.method = "BH")
+rowData(allSE)
+```
+
+Nominal _p_-values (`PVAL`) are corrected for multiple testing
+(`ADJ.PVAL`) using the method from Benjamini and Hochberg implemented
+in the function
+[p.adjust](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html) 
+from the
+[stats](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/00Index.html) package.
+
+To get a first overview, we inspect the $p$-value distribution and the volcano
+plot (fold change against $p$-value).
+
+```{r plot-DE, fig.width=12, fig.height=6}
+par(mfrow = c(1,2))
+pdistr(rowData(allSE)$PVAL)
+volcano(rowData(allSE)$FC, rowData(allSE)$ADJ.PVAL)
+```
+
+The expression change of highest statistical significance is observed for the
+ENTREZ gene 7525.
+
+```{r DE-exmpl}
+ind.min <- which.min(rowData(allSE)$ADJ.PVAL)
+rowData(allSE)[ind.min,]
+```
+
+This turns out to be the YES proto-oncogene 1
+([hsa:7525@KEGG](http://www.genome.jp/dbget-bin/www_bget?hsa:7525)).
 

@@ -1,28 +1,19 @@
 book_filename: "EnrichmentBrowserBook"
-pagetitle: "The EnrichmentBrowser book" 
+pagetitle: "The EnrichmentBrowser Book" 
 delete_merged_file: true
 new_session: true
 language:
   ui:
     chapter_name: "Chapter "
 output_dir: "docs"
-rmd_files: ["index.Rmd",
+rmd_files: ["index.Rmd",    
     # Part 1, Fundamentals:
     "theory.Rmd",
     "data-structures.Rmd",
     # Part 2, Data types:
-    "RNAseq.Rmd"
+    "RNAseq.Rmd",
     "microarray.Rmd",
-    # Part 3, Enrichment analysis:
-    #"sbea.Rmd",
-    #"nbea.Rmd",
-    #"combine.Rmd",
-    # Part 4, workflow:
-    #"ebrowser.Rmd",
-    # Part 5, workflows:
-    #"h3k9ac.Rmd",
-    #"cbp.Rmd",
-    #"h3k27me3.Rmd",
-    # Part 6, other crap:
-    #"about-the-contributors.Rmd",
-    #"bibliography.Rmd"]
+    # Part 3, Enrichment Analysis:
+    "sbea.Rmd",
+    "nbea.Rmd"
+]

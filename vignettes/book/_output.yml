@@ -5,13 +5,13 @@ bookdown::gitbook:
       theme: white
     toc:
       before: |
-        <li><a href="./">EnrichmentBrowser User's Guide</a></li>
+        <li><a href="./">EnrichmentBrowser Users Guide</a></li>
       after: |
         <li><a href="https://bioconductor.org" target="blank">Published by Bioconductor</a></li>
     download: null
-    edit: https://github.com/lgeistlinger/EnrichmentBrowserBook/edit/master/%s
-    view: https://github.com/lgeistlinger/EnrichmentBrowserBook/blob/master/%s
-    history: https://github.com/lgeistlinger/EnrichmentBrowserBook/commits/master/%s
+    edit: https://github.com/lgeistlinger/EnrichmentBrowserBook/edit/main/%s
+    view: https://github.com/lgeistlinger/EnrichmentBrowserBook/blob/main/%s
+    history: https://github.com/lgeistlinger/EnrichmentBrowserBook/commits/main/%s
     sharing:
       github: yes
       facebook: yes

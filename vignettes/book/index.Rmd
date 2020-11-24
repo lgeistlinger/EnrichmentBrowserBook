@@ -17,13 +17,11 @@ date: "`r rebook::openingDetails(Copyright='Bioconductor, 2020', Source=.gh_url)
 url: "`r .gh_url`"
 ---
 
-# Welcome
+# Introduction
 
 ```{r, echo=FALSE, results='asis'}
 rebook::chapterPreamble()
 ```
-
-# Introduction
 
 The `r Biocpkg("EnrichmentBrowser")` package implements essential functionality
 for the enrichment analysis of gene expression data.
@@ -56,7 +54,7 @@ The last section _Putting it all together_ also demonstrates how to wrap
 the whole workflow into a single function, making use of suitably chosen 
 defaults.
 
-# Relevant literature
+## Relevant literature
 
 If you use the EnrichmentBrowser for published research, please cite:
 
@@ -86,7 +84,7 @@ enrichment analysis, please see:
 [A comprehensive gene regulatory network for the diauxic shift in Saccharomyces cerevisiae](https://doi.org/10.1093/nar/gkt631).
 _Nucleic Acids Res_, 41(18):8452-63, 2013.
 
-# Quick start
+## Quick start
 
 After installation of the package start with
 
@@ -95,35 +93,41 @@ After installation of the package start with
 library(EnrichmentBrowser)
 ```
 
-2. Prepare the expression matrix (genes x samples):
+2. Prepare the expression dataset (genes x samples):
 
-```{r}
+```{r airway}
 data(airway, package = "airway")
 ```
 
 3. Define the experimental design (a group vector):
 
-```{r}
+```{r group}
 airway$GROUP <- ifelse(airway$dex == "untrt", 0, 1)
 ```
 
 4. Differential expression analysis between sample groups:
-```{r}
-airway <- deAna(airway, method = "edgeR") 
+```{r deAna}
+airway <- deAna(airway, de.method = "edgeR") 
 ```
 
-3. Obtain gene sets of interest:
-```{r}
+5. Obtain gene sets of interest:
+```{r getGS}
 kegg.gs <- getGenesets(org = "hsa", db = "kegg")
 ```
 
-4. Conduct the enrichment analysis:
-```{r}
+6. Synchronize gene ID type used by expression dataset and gene sets
+ (here by mapping the expression dataset from ENSEMBL to ENTREZ gene IDs):
+```{r idmap}
+airway <- idMap(airway, org = "hsa", from = "ENSEMBL", to = "ENTREZID")
+```
+
+7. Conduct the enrichment analysis:
+```{r ea}
 ea.res <- sbea(method = "ora", se = airway, gs = kegg.gs, perm = 0)
 ```
 
-5. Explore the results:
-```{r}
+8. Explore the results:
+```{r explore}
 gsRanking(ea.res)
 eaBrowse(ea.res, nr.show = 3)
 ```
@@ -140,10 +144,4 @@ The same goes for well-considered suggestions for improvements.
 Other questions about how to use `r Biocpkg("EnrichmentBrowser")` are best sent to the [Bioconductor support site](https://support.bioconductor.org).
 Please send requests for general assistance and advice to the support site, rather than to the individual authors. 
 Users posting to the support site for the first time may find it helpful to read the [posting guide](http://www.bioconductor.org/help/support/posting-guide).
-
-## Session information {-}
-
-```{r, echo=FALSE, results='asis'}
-rebook::prettySessionInfo()
-```
 
